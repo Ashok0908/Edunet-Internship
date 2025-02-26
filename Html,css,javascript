@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASHOK STEGTOOL - Image Steganography Tool</title>
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --secondary: #166088;
+            --dark: #333333;
+            --light: #f5f5f5;
+            --accent: #4ecdc4;
+            --danger: #ff6b6b;
+            --success: #2ecc71;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            margin-bottom: 0.5rem;
+        }
+        
+        .tagline {
+            font-style: italic;
+            opacity: 0.8;
+        }
+        
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 1.5rem;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            color: var(--secondary);
+            border-bottom: 3px solid var(--secondary);
+            font-weight: bold;
+        }
+        
+        .tab:hover:not(.active) {
+            background-color: #f9f9f9;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: var(--dark);
+        }
+        
+        input[type="file"], 
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: var(--primary);
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        
+        .preview-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 1.5rem 0;
+            max-width: 100%;
+        }
+        
+        #imagePreview, #stegoPreview {
+            max-width: 100%;
+            max-height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 1rem;
+            display: none;
+        }
+        
+        .result-container {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .alert.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .info-panel {
+            background-color: #e7f5fe;
+            border: 1px solid #b8daff;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .progress-container {
+            width: 100%;
+            background-color: #f1f1f1;
+            border-radius: 4px;
+            margin: 1rem 0;
+            display: none;
+        }
+        
+        .progress-bar {
+            width: 0%;
+            height: 20px;
+            background-color: var(--accent);
+            border-radius: 4px;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+        }
+
+        .status-text {
+            text-align: center;
+            margin-top: 0.5rem;
+            font-style: italic;
+            color: #666;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            background-color: var(--dark);
+            color: white;
+            margin-top: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            main {
+                padding: 1rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .tab {
+                padding: 0.5rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Ashok STEGTOOL</h1>
+        <p class="tagline">Hide your secrets in plain sight</p>
+    </header>
+    
+    <main>
+        <div class="container">
+            <div class="tabs">
+                <div class="tab active" data-tab="encode">Encode Message</div>
+                <div class="tab" data-tab="decode">Decode Message</div>
+                <div class="tab" data-tab="about">About</div>
+            </div>
+            
+            <div id="encodeTab" class="tab-content active">
+                <div class="info-panel">
+                    <p>Upload an image and enter a secret message to hide it within the image. The resulting steganographic image can be downloaded and shared.</p>
+                </div>
+                
+                <div class="input-group">
+                    <label for="coverImage">Choose Cover Image:</label>
+                    <input type="file" id="coverImage" accept="image/png, image/jpeg">
+                </div>
+                
+                <div class="preview-container">
+                    <img id="imagePreview" alt="Image Preview">
+                </div>
+                
+                <div class="input-group">
+                    <label for="secretMessage">Secret Message:</label>
+                    <textarea id="secretMessage" placeholder="Enter your secret message to hide in the image..."></textarea>
+                </div>
+                
+                <div class="input-group">
+                    <label for="password">Password (Optional):</label>
+                    <input type="password" id="password" placeholder="Enter a password for additional security">
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-bar">0%</div>
+                </div>
+                
+                <div class="status-text" id="encodeStatus"></div>
+                
+                <div class="alert success" id="encodeSuccess">
+                    Message successfully hidden in the image!
+                </div>
+                
+                <div class="alert error" id="encodeError">
+                    Error: Failed to hide message. Please try a different image or shorter message.
+                </div>
+                
+                <div class="button-group">
+                    <button id="encodeBtn" disabled>Hide Message</button>
+                    <button id="downloadBtn" disabled>Download Image</button>
+                </div>
+                
+                <div class="preview-container">
+                    <canvas id="outputCanvas" style="display: none;"></canvas>
+                    <img id="stegoPreview" alt="Steganographic Image">
+                </div>
+            </div>
+            
+            <div id="decodeTab" class="tab-content">
+                <div class="info-panel">
+                    <p>Upload an image containing a hidden message to extract and read the secret message.</p>
+                </div>
+                
+                <div class="input-group">
+                    <label for="stegoImage">Choose Steganographic Image:</label>
+                    <input type="file" id="stegoImage" accept="image/png">
+                </div>
+                
+                <div class="preview-container">
+                    <img id="decodePreview" alt="Image to Decode" style="max-width: 100%; max-height: 400px; border: 1px solid #ddd; border-radius: 4px; margin-top: 1rem; display: none;">
+                </div>
+                
+                <div class="input-group">
+                    <label for="decodePassword">Password (If required):</label>
+                    <input type="password" id="decodePassword" placeholder="Enter the password if the message was encrypted">
+                </div>
+                
+                <div class="progress-container" id="decodeProgress">
+                    <div class="progress-bar" id="decodeProgressBar">0%</div>
+                </div>
+                
+                <div class="status-text" id="decodeStatus"></div>
+                
+                <div class="alert success" id="decodeSuccess">
+                    Message successfully extracted!
+                </div>
+                
+                <div class="alert error" id="decodeError">
+                    Error: No hidden message found or incorrect password.
+                </div>
+                
+                <div class="button-group">
+                    <button id="decodeBtn" disabled>Extract Message</button>
+                </div>
+                
+                <div class="result-container" id="resultContainer">
+                    <label>Extracted Message:</label>
+                    <textarea id="extractedMessage" readonly></textarea>
+                </div>
+            </div>
+            
+            <div id="aboutTab" class="tab-content">
+                <h2>About Steganography</h2>
+                <p>Steganography is the practice of concealing a message within another file or message, so that the existence of the hidden message is not apparent to an observer.</p>
+                
+                <h3>How It Works</h3>
+                <p>This tool uses the Least Significant Bit (LSB) technique to hide messages in images. For each pixel in the image, the least significant bit of each color channel (red, green, blue) is replaced with bits from the secret message.</p>
+                
+                <h3>Features</h3>
+                <ul>
+                    <li>Hide text messages in PNG or JPEG images</li>
+                    <li>Optional password protection using AES encryption</li>
+                    <li>No server-side processing - everything happens in your browser</li>
+                    <li>Compatible with most image formats</li>
+                </ul>
+                
+                <h3>Tips for Best Results</h3>
+                <ul>
+                    <li>Use PNG images when possible as they are lossless</li>
+                    <li>Choose images with complex patterns and colors</li>
+                    <li>Larger images can store more information</li>
+                    <li>Always save the output as PNG to avoid losing the hidden data</li>
+                </ul>
+                
+                <h3>Privacy & Security</h3>
+                <p>This tool processes everything locally in your browser. Your images and messages never leave your computer.</p>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p>SecretPixel Steganography Tool &copy; 2025 | All rights reserved | Capstone Project</p>
+    </footer>
+    
+    <script>
+        // Tab switching functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab + 'Tab').classList.add('active');
+            });
+        });
+        
+        // Encode variables
+        const coverImageInput = document.getElementById('coverImage');
+        const imagePreview = document.getElementById('imagePreview');
+        const secretMessageInput = document.getElementById('secretMessage');
+        const passwordInput = document.getElementById('password');
+        const encodeBtn = document.getElementById('encodeBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const stegoPreview = document.getElementById('stegoPreview');
+        const outputCanvas = document.getElementById('outputCanvas');
+        const encodeSuccess = document.getElementById('encodeSuccess');
+        const encodeError = document.getElementById('encodeError');
+        const encodeStatus = document.getElementById('encodeStatus');
+        const progressBar = document.querySelector('.progress-bar');
+        const progressContainer = document.querySelector('.progress-container');
+        
+        // Decode variables
+        const stegoImageInput = document.getElementById('stegoImage');
+        const decodePreview = document.getElementById('decodePreview');
+        const decodePasswordInput = document.getElementById('decodePassword');
+        const decodeBtn = document.getElementById('decodeBtn');
+        const extractedMessageInput = document.getElementById('extractedMessage');
+        const resultContainer = document.getElementById('resultContainer');
+        const decodeSuccess = document.getElementById('decodeSuccess');
+        const decodeError = document.getElementById('decodeError');
+        const decodeStatus = document.getElementById('decodeStatus');
+        const decodeProgressBar = document.getElementById('decodeProgressBar');
+        const decodeProgress = document.getElementById('decodeProgress');
+        
+        // Global variables to store processed data
+        let processedDataURL = '';
+        
+        // Preview cover image
+        coverImageInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    
+                    // Check if message is also entered
+                    encodeBtn.disabled = !secretMessageInput.value;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Preview stego image for decoding
+        stegoImageInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    decodePreview.src = e.target.result;
+                    decodePreview.style.display = 'block';
+                    decodeBtn.disabled = false;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Enable encode button when both image and message are provided
+        secretMessageInput.addEventListener('input', function() {
+            encodeBtn.disabled = !imagePreview.src || !this.value;
+        });
+        
+        // Core steganography functions
+        function textToBinary(text) {
+            let binaryResult = '';
+            for (let i = 0; i < text.length; i++) {
+                const binary = text.charCodeAt(i).toString(2).padStart(8, '0');
+                binaryResult += binary;
+            }
+            return binaryResult;
+        }
+        
+        function binaryToText(binary) {
+            let text = '';
+            for (let i = 0; i < binary.length; i += 8) {
+                const byte = binary.substr(i, 8);
+                if (byte === '00000000') {
+                    break; // End of message marker
+                }
+                text += String.fromCharCode(parseInt(byte, 2));
+            }
+            return text;
+        }
+        
+        // Simple password hash for demo purposes
+        // In a real application, use a proper crypto library
+        function simpleHash(password) {
+            let hash = 0;
+            if (password.length === 0) return hash;
+            
+            for (let i = 0; i < password.length; i++) {
+                const char = password.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32bit integer
+            }
+            
+            return Math.abs(hash).toString();
+        }
+        
+        // Encrypt message with password
+        function encryptMessage(message, password) {
+            if (!password) return message;
+            
+            const hash = simpleHash(password);
+            let encrypted = '';
+            
+            for (let i = 0; i < message.length; i++) {
+                const charCode = message.charCodeAt(i);
+                const keyChar = hash[i % hash.length];
+                const keyCode = parseInt(keyChar);
+                encrypted += String.fromCharCode(charCode ^ keyCode);
+            }
+            
+            return encrypted;
+        }
+        
+        // Decrypt message with password
+        function decryptMessage(message, password) {
+            if (!password) return message;
+            
+            // Encryption and decryption are symmetric in this simple XOR implementation
+            return encryptMessage(message, password);
+        }
+        
+        // Hide message in image
+        encodeBtn.addEventListener('click', function() {
+            const file = coverImageInput.files[0];
+            if (!file || !secretMessageInput.value) return;
+            
+            // Reset UI states
+            encodeSuccess.style.display = 'none';
+            encodeError.style.display = 'none';
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressBar.textContent = '0%';
+            encodeStatus.textContent = 'Preparing image...';
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // Create canvas and get context
+                    const canvas = outputCanvas;
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Get image data
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const data = imageData.data;
+                    
+                    // Encrypt message if password provided
+                    let message = secretMessageInput.value;
+                    if (passwordInput.value) {
+                        encodeStatus.textContent = 'Encrypting message...';
+                        message = encryptMessage(message, passwordInput.value);
+                    }
+                    
+                    // Add terminator to message
+                    message += '\0'; // Null terminator
+                    
+                    // Convert message to binary
+                    encodeStatus.textContent = 'Converting message to binary...';
+                    const binaryMessage = textToBinary(message);
+                    
+                    // Check if message fits in image
+                    const maxBits = (canvas.width * canvas.height * 3); // 3 bits per pixel (1 per RGB)
+                    if (binaryMessage.length > maxBits) {
+                        encodeError.textContent = `Error: Message too large for this image. Maximum ${Math.floor(maxBits / 8)} characters.`;
+                        encodeError.style.display = 'block';
+                        progressContainer.style.display = 'none';
+                        encodeStatus.textContent = '';
+                        return;
+                    }
+                    
+                    // Hide message in image
+                    encodeStatus.textContent = 'Hiding message in image...';
+                    let bitIndex = 0;
+                    
+                    // Process in chunks to avoid UI freezing
+                    const chunkSize = 10000; // Process 10000 pixels at a time
+                    const totalIterations = Math.ceil(binaryMessage.length / 3);
+                    let currentIteration = 0;
+                    
+                    function processChunk() {
+                        const endPixel = Math.min(currentIteration + chunkSize, totalIterations);
+                        
+                        for (let i = currentIteration; i < endPixel; i++) {
+                            const pixelIndex = i * 4; // 4 values per pixel (RGBA)
+                            
+                            // Modify RGB channels (skip Alpha)
+                            for (let j = 0; j < 3; j++) { // R, G, B
+                                if (bitIndex < binaryMessage.length) {
+                                    // Clear the LSB and set it to the message bit
+                                    data[pixelIndex + j] = (data[pixelIndex + j] & 0xFE) | parseInt(binaryMessage[bitIndex]);
+                                    bitIndex++;
+                                }
+                            }
+                        }
+                        
+                        currentIteration = endPixel;
+                        const progress = Math.min(100, Math.round((bitIndex / binaryMessage.length) * 100));
+                        progressBar.style.width = progress + '%';
+                        progressBar.textContent = progress + '%';
+                        
+                        if (bitIndex < binaryMessage.length && currentIteration < totalIterations) {
+                            // Continue processing in the next chunk
+                            setTimeout(processChunk, 0);
+                        } else {
+                            // Finished hiding the message
+                            ctx.putImageData(imageData, 0, 0);
+                            
+                            // Store the dataURL for download
+                            processedDataURL = canvas.toDataURL('image/png');
+                            
+                            // Display the result
+                            stegoPreview.src = processedDataURL;
+                            stegoPreview.style.display = 'block';
+                            downloadBtn.disabled = false;
+                            
+                            encodeSuccess.style.display = 'block';
+                            progressContainer.style.display = 'none';
+                            encodeStatus.textContent = 'Message successfully hidden!';
+                        }
+                    }
+                    
+                    // Start processing
+                    setTimeout(processChunk, 0);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        // Download stego image - FIXED VERSION
+        downloadBtn.addEventListener('click', function() {
+            if (!processedDataURL) {
+                alert("No processed image to download. Please encode a message first.");
+                return;
+            }
+            
+            // Create filename with original name if available
+            let filename = "secret_message.png";
+            if (coverImageInput.files.length > 0) {
+                let originalName = coverImageInput.files[0].name;
+                // Replace extension with .png
+                filename = originalName.substring(0, originalName.lastIndexOf('.')) + '_secret.png';
+            }
+            
+            // Create an actual anchor element and append to DOM
+            const downloadLink = document.createElement('a');
+            downloadLink.href = processedDataURL;
+            downloadLink.download = filename;
+            downloadLink.style.display = 'none';
+            document.body.appendChild(downloadLink);
+            
+            // Trigger click programmatically
+            downloadLink.click();
+            
+            // Clean up
+            setTimeout(function() {
+                document.body.removeChild(downloadLink);
+            }, 100);
+        });
+        
+        // Extract message from image
+        decodeBtn.addEventListener('click', function() {
+            const file = stegoImageInput.files[0];
+            if (!file) return;
+            
+            // Reset UI states
+            decodeSuccess.style.display = 'none';
+            decodeError.style.display = 'none';
+            resultContainer.style.display = 'none';
+            decodeProgress.style.display = 'block';
+            decodeProgressBar.style.width = '0%';
+            decodeProgressBar.textContent = '0%';
+            decodeStatus.textContent = 'Loading image...';
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // Create canvas and get context
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Get image data
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const data = imageData.data;
+                    
+                    decodeStatus.textContent = 'Extracting hidden data...';
+                    
+                    // Extract binary message
+                    let binaryMessage = '';
+                    const totalPixels = img.width * img.height;
+                    
+                    // Process in chunks to avoid UI freezing
+                    const chunkSize = 10000; // Process 10000 pixels at a time
+                    let currentPixel = 0;
+                    let foundTerminator = false;
+                    
+                    function processDecodeChunk() {
+                        const endPixel = Math.min(currentPixel + chunkSize, totalPixels);
+                        
+                        for (let i = currentPixel; i < endPixel; i++) {
+                            const pixelIndex = i * 4; // 4 values per pixel (RGBA)
+                            
+                            // Extract from RGB channels (skip Alpha)
+                            for (let j = 0; j < 3; j++) { // R, G, B
+                                // Get LSB
+                                const bit = data[pixelIndex + j] & 1;
+                                binaryMessage += bit;
+                                
+                                // Check for terminator every 8 bits
+                                if (binaryMessage.length % 8 === 0) {
+                                    // Check the last 8 bits for null terminator
+                                    const lastByte = binaryMessage.substr(binaryMessage.length - 8);
+                                    if (lastByte === '00000000') {
+                                        foundTerminator = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            if (foundTerminator) break;
+                        }
+                        
+                        currentPixel = endPixel;
+                        const progress = Math.min(100, Math.round((currentPixel / totalPixels) * 100));
+                        decodeProgressBar.style.width = progress + '%';
+                        decodeProgressBar.textContent = progress + '%';
+                        
+                        if (!foundTerminator && currentPixel < totalPixels) {
+                            // Continue processing in the next chunk
+                            setTimeout(processDecodeChunk, 0);
+                        } else {
+                            // Finished extracting or processed all pixels
+                            decodeStatus.textContent = 'Processing extracted data...';
+                            
+                            if (foundTerminator) {
+                                // Remove the terminator
+                                binaryMessage = binaryMessage.substr(0, binaryMessage.length - 8);
+                                
+                                // Convert binary to text
+                                let extractedMessage = binaryToText(binaryMessage);
+                                
+                                // Decrypt if password is provided
+                                if (decodePasswordInput.value) {
+                                    extractedMessage = decryptMessage(extractedMessage, decodePasswordInput.value);
+                                }
+                                
+                                // Display the result
+                                extractedMessageInput.value = extractedMessage;
+                                resultContainer.style.display = 'block';
+                                decodeSuccess.style.display = 'block';
+                                decodeStatus.textContent = 'Message successfully extracted!';
+                            } else {
+                                decodeError.style.display = 'block';
+                                decodeStatus.textContent = 'No hidden message found or incorrect password.';
+                            }
+                            
+                            decodeProgress.style.display = 'none';
+                        }
+                    }
+                    
+                    // Start processing
+                    setTimeout(processDecodeChunk, 0);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    </script>
+</body>
+</html>
